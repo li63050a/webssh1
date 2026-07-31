@@ -1,0 +1,12 @@
+⚠️ 该链接是一个网页，不可下载。
+
+🚀 代理下载站使用说明
+
+格式1（默认 HTTPS）：
+  你的域名/example.com/file.zip
+
+格式2（指定协议）：
+  你的域名/http://example.com/file.zip
+  你的域名/https://example.com/file.zip
+
+如果是网页，会提示不可下载；如果是文件，直接弹出下载。
