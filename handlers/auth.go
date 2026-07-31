@@ -94,7 +94,49 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
-// 认证中间件（用于HTTP API）
+// ---------- 修改密码 ----------
+type ChangePasswordInput struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+func ChangePassword(c *gin.Context) {
+	username, _ := c.Get("username")
+
+	var input ChangePasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var hashedPassword string
+	err := db.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&hashedPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(input.OldPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "old password is incorrect"})
+		return
+	}
+
+	newHashed, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash new password"})
+		return
+	}
+
+	_, err = db.DB.Exec("UPDATE users SET password=? WHERE username=?", string(newHashed), username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
+}
+
+// ---------- 认证中间件 ----------
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -121,7 +163,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// 专门用于 WebSocket 的认证（从 URL 参数获取 token）
 func WSAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.Query("token")

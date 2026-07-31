@@ -28,9 +28,12 @@
 <body>
     <div class="info-bar">
         <span id="status">Not connected</span>
+        <button id="changePassPanelBtn" style="background:#f0ad4e; border:none; color:white; padding:2px 10px; cursor:pointer; margin-right:5px;">Change Password</button>
         <button id="logoutBtn" style="float:right; background:#d9534f; border:none; color:white; padding:2px 10px; cursor:pointer;">Logout</button>
     </div>
     <div id="terminal-container"></div>
+
+    <!-- 登录面板 -->
     <div class="login-panel" id="loginPanel">
         <h3>Login</h3>
         <input type="text" id="username" placeholder="Username">
@@ -38,6 +41,8 @@
         <button id="loginBtn">Login</button>
         <p style="margin-top:10px;">No account? <a href="#" id="showRegister" style="color:#007acc;">Register</a></p>
     </div>
+
+    <!-- 注册面板 -->
     <div class="login-panel" id="registerPanel">
         <h3>Register</h3>
         <input type="text" id="regUser" placeholder="Username">
@@ -45,6 +50,8 @@
         <button id="registerBtn">Register</button>
         <p style="margin-top:10px;"><a href="#" id="showLogin" style="color:#007acc;">Back to Login</a></p>
     </div>
+
+    <!-- SSH 连接面板 -->
     <div class="login-panel" id="sshPanel">
         <h3>SSH Connection</h3>
         <input type="text" id="sshHost" placeholder="Host (IP)">
@@ -52,6 +59,15 @@
         <input type="text" id="sshUser" placeholder="SSH Username">
         <input type="password" id="sshPass" placeholder="SSH Password">
         <button id="connectBtn">Connect</button>
+    </div>
+
+    <!-- 修改密码面板（新增） -->
+    <div class="login-panel" id="changePasswordPanel">
+        <h3>Change Password</h3>
+        <input type="password" id="oldPass" placeholder="Old Password">
+        <input type="password" id="newPass" placeholder="New Password (min 6 chars)">
+        <button id="changePassBtn">Change Password</button>
+        <p style="margin-top:10px;"><a href="#" id="backToSSH" style="color:#007acc;">Back to SSH</a></p>
     </div>
 
     <script>
@@ -77,12 +93,16 @@
 
         document.getElementById('showRegister').onclick = e => { e.preventDefault(); showPanel('registerPanel'); };
         document.getElementById('showLogin').onclick = e => { e.preventDefault(); showPanel('loginPanel'); };
+        document.getElementById('backToSSH').onclick = e => { e.preventDefault(); showPanel('sshPanel'); };
+
         document.getElementById('logoutBtn').onclick = () => {
             localStorage.removeItem('token');
             token = null;
             if (ws) ws.close();
             location.reload();
         };
+
+        document.getElementById('changePassPanelBtn').onclick = () => showPanel('changePasswordPanel');
 
         document.getElementById('loginBtn').onclick = async () => {
             const user = document.getElementById('username').value;
@@ -116,6 +136,26 @@
             } else {
                 const data = await res.json();
                 alert(data.error || 'Registration failed');
+            }
+        };
+
+        document.getElementById('changePassBtn').onclick = async () => {
+            const oldPass = document.getElementById('oldPass').value;
+            const newPass = document.getElementById('newPass').value;
+            const res = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({old_password: oldPass, new_password: newPass})
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Password changed successfully!');
+                showPanel('sshPanel');
+            } else {
+                alert(data.error || 'Failed to change password');
             }
         };
 

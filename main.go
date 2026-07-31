@@ -47,10 +47,16 @@ func main() {
 		api.POST("/login", handlers.Login)
 	}
 
-	auth := r.Group("/api")
-	auth.Use(handlers.WSAuthMiddleware())
+	authAPI := r.Group("/api")
+	authAPI.Use(handlers.AuthMiddleware())
 	{
-		auth.GET("/ws/ssh", handlers.SSHWebSocket)
+		authAPI.POST("/change-password", handlers.ChangePassword) // 新增
+	}
+
+	wsAuth := r.Group("/api")
+	wsAuth.Use(handlers.WSAuthMiddleware())
+	{
+		wsAuth.GET("/ws/ssh", handlers.SSHWebSocket)
 	}
 
 	addr := cfg.Server.Addr
