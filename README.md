@@ -1,4 +1,3 @@
-```markdown
 # WebSSH - 轻量级 Web 终端管理器
 
 一个开箱即用的 Web 端 SSH 客户端，使用 Go 语言编写，单二进制文件分发，无需安装任何数据库或运行时环境。
@@ -121,5 +120,3 @@ webssh1/
 Apache License 2.0，详见 LICENSE 文件。
 
 Copyright 2026 li63050a
-
-```
